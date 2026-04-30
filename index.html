@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Vintage Camera - 复古相机胶片模拟</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <h1 class="app-title">📷 Vintage Camera</h1>
+            <p class="app-subtitle">时光滤镜，永恒记忆</p>
+        </header>
+
+        <main class="app-main">
+            <section id="home-page" class="page active">
+                <div class="page-content">
+                    <div class="album-list-header">
+                        <h2>📚 精选相册</h2>
+                        <button id="refresh-albums" class="refresh-btn">🔄 刷新</button>
+                    </div>
+                    <div id="album-list" class="album-grid">
+                        <div class="empty-state">
+                            <div class="empty-icon">📷</div>
+                            <p>暂无相册，快去滤镜页面制作你的第一张复古照片吧！</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="filter-page" class="page">
+                <div class="page-content">
+                    <div class="camera-container">
+                        <div class="camera-preview">
+                            <video id="camera-video" autoplay playsinline></video>
+                            <canvas id="photo-canvas" class="photo-canvas"></canvas>
+                            <div id="canvas-overlay" class="canvas-overlay hidden">
+                                <div class="loading-spinner">
+                                    <div class="spinner"></div>
+                                    <p>处理中...</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="camera-controls">
+                            <button id="toggle-camera" class="control-btn active">
+                                <span class="btn-icon">📷</span>
+                                <span>拍照</span>
+                            </button>
+                            <button id="upload-photo" class="control-btn">
+                                <span class="btn-icon">📁</span>
+                                <span>上传</span>
+                            </button>
+                            <button id="capture-photo" class="capture-btn">
+                                <div class="capture-inner"></div>
+                            </button>
+                            <button id="switch-camera" class="control-btn">
+                                <span class="btn-icon">🔄</span>
+                                <span>切换</span>
+                            </button>
+                        </div>
+
+                        <input type="file" id="file-input" accept="image/*" style="display: none;">
+                    </div>
+
+                    <div id="filter-section" class="filter-section hidden">
+                        <div class="filter-controls">
+                            <h3>🎨 选择滤镜</h3>
+                            <div class="filter-grid" id="filter-grid">
+                            </div>
+                        </div>
+
+                        <div id="adjustment-section" class="adjustment-section hidden">
+                            <h3>⚙️ 调整参数</h3>
+                            <div class="adjustment-controls" id="adjustment-controls">
+                            </div>
+                        </div>
+
+                        <div class="action-buttons">
+                            <button id="reset-filter" class="action-btn secondary">
+                                <span class="btn-icon">↩️</span>
+                                <span>重置</span>
+                            </button>
+                            <button id="save-photo" class="action-btn primary">
+                                <span class="btn-icon">💾</span>
+                                <span>保存</span>
+                            </button>
+                            <button id="create-album" class="action-btn accent">
+                                <span class="btn-icon">📚</span>
+                                <span>制作相册</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="profile-page" class="page">
+                <div class="page-content">
+                    <div class="profile-header">
+                        <div class="profile-avatar">👤</div>
+                        <div class="profile-info">
+                            <h2 class="profile-name">复古摄影爱好者</h2>
+                            <p class="profile-bio">用胶片滤镜记录生活中的美好瞬间</p>
+                        </div>
+                    </div>
+
+                    <div class="profile-stats">
+                        <div class="stat-item">
+                            <span class="stat-value" id="album-count">0</span>
+                            <span class="stat-label">相册</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value" id="photo-count">0</span>
+                            <span class="stat-label">照片</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value" id="like-count">0</span>
+                            <span class="stat-label">获赞</span>
+                        </div>
+                    </div>
+
+                    <div class="my-albums-section">
+                        <h3>📚 我的相册</h3>
+                        <div id="my-album-list" class="album-grid">
+                            <div class="empty-state">
+                                <div class="empty-icon">📷</div>
+                                <p>你还没有创建相册，快去滤镜页面制作第一张复古照片吧！</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="my-photos-section">
+                        <h3>📸 我的照片</h3>
+                        <div id="my-photo-list" class="photo-grid">
+                            <div class="empty-state">
+                                <div class="empty-icon">🖼️</div>
+                                <p>你还没有保存照片</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <nav class="bottom-nav">
+            <button class="nav-item active" data-page="home-page">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-label">首页</span>
+            </button>
+            <button class="nav-item" data-page="filter-page">
+                <span class="nav-icon">🎨</span>
+                <span class="nav-label">滤镜</span>
+            </button>
+            <button class="nav-item" data-page="profile-page">
+                <span class="nav-icon">👤</span>
+                <span class="nav-label">我的</span>
+            </button>
+        </nav>
+    </div>
+
+    <div id="album-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📚 创建电子相册</h2>
+                <button class="modal-close" id="close-album-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="album-title">相册标题</label>
+                    <input type="text" id="album-title" placeholder="给相册起个名字..." maxlength="50">
+                </div>
+                <div class="form-group">
+                    <label for="album-description">文字备注</label>
+                    <textarea id="album-description" placeholder="添加一些文字描述这个相册..." maxlength="200"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>预览照片</label>
+                    <div id="album-preview" class="album-preview">
+                        <img id="preview-image" src="" alt="预览">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="cancel-album" class="modal-btn secondary">取消</button>
+                <button id="confirm-album" class="modal-btn primary">创建相册</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="share-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>📤 分享到社交平台</h2>
+                <button class="modal-close" id="close-share-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="share-options">
+                    <button class="share-option" data-platform="wechat">
+                        <span class="share-icon">💬</span>
+                        <span>微信</span>
+                    </button>
+                    <button class="share-option" data-platform="weibo">
+                        <span class="share-icon">📢</span>
+                        <span>微博</span>
+                    </button>
+                    <button class="share-option" data-platform="qq">
+                        <span class="share-icon">🐧</span>
+                        <span>QQ</span>
+                    </button>
+                    <button class="share-option" data-platform="moments">
+                        <span class="share-icon">🌐</span>
+                        <span>朋友圈</span>
+                    </button>
+                    <button class="share-option" data-platform="download">
+                        <span class="share-icon">💾</span>
+                        <span>保存图片</span>
+                    </button>
+                    <button class="share-option" data-platform="copy">
+                        <span class="share-icon">📋</span>
+                        <span>复制链接</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast hidden">
+        <span id="toast-message"></span>
+    </div>
+
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>
