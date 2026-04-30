@@ -62,13 +62,6 @@ const App = {
         const video = document.getElementById('camera-video');
         const canvas = document.getElementById('photo-canvas');
 
-        try {
-            await this.startCamera();
-        } catch (error) {
-            console.error('相机初始化失败:', error);
-            this.showToast('无法访问相机，请尝试上传照片');
-        }
-
         document.getElementById('toggle-camera').addEventListener('click', () => {
             this.toggleCameraMode();
         });
@@ -80,6 +73,22 @@ const App = {
         document.getElementById('capture-photo').addEventListener('click', () => {
             this.capturePhoto();
         });
+
+        this.showCameraPlaceholder();
+    },
+
+    showCameraPlaceholder() {
+        const video = document.getElementById('camera-video');
+        const canvas = document.getElementById('photo-canvas');
+        const placeholder = document.getElementById('camera-placeholder');
+
+        if (!this.cameraStream) {
+            video.classList.add('hidden');
+            canvas.classList.remove('active');
+            if (placeholder) {
+                placeholder.classList.remove('hidden');
+            }
+        }
     },
 
     async startCamera() {
@@ -109,26 +118,36 @@ const App = {
         }
     },
 
-    toggleCameraMode() {
+    async toggleCameraMode() {
         const toggleBtn = document.getElementById('toggle-camera');
         const video = document.getElementById('camera-video');
         const canvas = document.getElementById('photo-canvas');
         const uploadBtn = document.getElementById('upload-photo');
+        const placeholder = document.getElementById('camera-placeholder');
 
-        if (toggleBtn.classList.contains('active')) {
+        if (toggleBtn.classList.contains('active') && this.cameraStream) {
             return;
         }
 
         toggleBtn.classList.add('active');
         uploadBtn.classList.remove('active');
 
-        if (this.cameraStream) {
+        try {
+            await this.startCamera();
+            if (placeholder) {
+                placeholder.classList.add('hidden');
+            }
             video.classList.remove('hidden');
             canvas.classList.remove('active');
-            this.startCamera();
+        } catch (error) {
+            console.error('无法访问相机:', error);
+            this.showToast('无法访问相机，请尝试上传照片');
+            if (placeholder) {
+                placeholder.classList.remove('hidden');
+            }
         }
 
-        document.getElementById('filter-section').classList.add('hidden');
+        document.getElementById('filter-overlay').classList.add('hidden');
     },
 
     async switchCameraFacing() {
@@ -231,8 +250,38 @@ const App = {
     },
 
     showFilterSection() {
-        document.getElementById('filter-section').classList.remove('hidden');
+        document.getElementById('filter-overlay').classList.remove('hidden');
         this.generateFilterPreviews();
+        this.setupFilterTabs();
+    },
+
+    setupFilterTabs() {
+        const tabs = document.querySelectorAll('.filter-tab');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const targetTab = tab.dataset.tab;
+                this.switchFilterTab(targetTab);
+            });
+        });
+    },
+
+    switchFilterTab(tabId) {
+        const tabs = document.querySelectorAll('.filter-tab');
+        const tabContents = document.querySelectorAll('.filter-tab-content');
+
+        tabs.forEach(tab => {
+            tab.classList.remove('active');
+            if (tab.dataset.tab === tabId) {
+                tab.classList.add('active');
+            }
+        });
+
+        tabContents.forEach(content => {
+            content.classList.remove('active');
+            if (content.id === `tab-${tabId}`) {
+                content.classList.add('active');
+            }
+        });
     },
 
     setupFilters() {
@@ -334,13 +383,14 @@ const App = {
     },
 
     showAdjustmentSection(filterId) {
-        const adjustmentSection = document.getElementById('adjustment-section');
         const adjustmentControls = document.getElementById('adjustment-controls');
+        const adjustmentsTab = document.querySelector('.filter-tab[data-tab="adjustments"]');
         
         const filterConfig = FilterModule.getFilterConfig(filterId);
         
         if (filterConfig && filterConfig.adjustments) {
-            adjustmentSection.classList.remove('hidden');
+            adjustmentsTab.style.opacity = '1';
+            adjustmentsTab.style.pointerEvents = 'auto';
             adjustmentControls.innerHTML = '';
             
             this.adjustments = {};
@@ -375,7 +425,8 @@ const App = {
                 });
             });
         } else {
-            adjustmentSection.classList.add('hidden');
+            adjustmentsTab.style.opacity = '0.5';
+            adjustmentsTab.style.pointerEvents = 'none';
         }
     },
 
@@ -445,8 +496,7 @@ const App = {
                 }
             });
             
-            document.getElementById('adjustment-section').classList.add('hidden');
-            
+            this.switchFilterTab('filters');
             this.showToast('已重置为原图');
         };
         img.src = this.originalPhotoData;
@@ -608,7 +658,7 @@ const App = {
         if (albums.length === 0) {
             albumList.innerHTML = `
                 <div class="empty-state">
-                    <div class="empty-icon">📷</div>
+                    <div class="empty-icon"><i class="fas fa-camera"></i></div>
                     <p>暂无相册，快去滤镜页面制作你的第一张复古照片吧！</p>
                 </div>
             `;
@@ -635,14 +685,14 @@ const App = {
                         <span class="album-date">${formattedDate}</span>
                         <div class="album-actions">
                             <div class="action-icon like-btn ${album.isLiked ? 'liked' : ''}" data-album-id="${album.id}">
-                                <span>❤️</span>
+                                <i class="fas fa-heart"></i>
                                 <span class="like-count">${album.likes}</span>
                             </div>
                             <div class="action-icon favorite-btn ${album.isFavorited ? 'favorited' : ''}" data-album-id="${album.id}">
-                                <span>⭐</span>
+                                <i class="fas fa-star"></i>
                             </div>
                             <div class="action-icon share-btn" data-album-id="${album.id}">
-                                <span>📤</span>
+                                <i class="fas fa-share-alt"></i>
                             </div>
                         </div>
                     </div>
@@ -728,7 +778,7 @@ const App = {
         if (albums.length === 0) {
             albumList.innerHTML = `
                 <div class="empty-state">
-                    <div class="empty-icon">📷</div>
+                    <div class="empty-icon"><i class="fas fa-camera"></i></div>
                     <p>你还没有创建相册，快去滤镜页面制作第一张复古照片吧！</p>
                 </div>
             `;
@@ -746,7 +796,7 @@ const App = {
         if (photos.length === 0) {
             photoList.innerHTML = `
                 <div class="empty-state">
-                    <div class="empty-icon">🖼️</div>
+                    <div class="empty-icon"><i class="fas fa-image"></i></div>
                     <p>你还没有保存照片</p>
                 </div>
             `;
