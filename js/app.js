@@ -253,6 +253,7 @@ const App = {
         document.getElementById('filter-overlay').classList.remove('hidden');
         this.generateFilterPreviews();
         this.setupFilterTabs();
+        this.setupFilterCloseButton();
     },
 
     setupFilterTabs() {
@@ -263,6 +264,28 @@ const App = {
                 this.switchFilterTab(targetTab);
             });
         });
+    },
+
+    setupFilterCloseButton() {
+        const closeBtn = document.getElementById('close-filter');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+                this.closeFilterSection();
+            });
+        }
+    },
+
+    closeFilterSection() {
+        document.getElementById('filter-overlay').classList.add('hidden');
+        
+        if (this.originalPhotoData) {
+            this.resetFilter();
+        } else {
+            this.currentFilter = 'none';
+            this.adjustments = {};
+        }
+        
+        this.switchFilterTab('filters');
     },
 
     switchFilterTab(tabId) {
